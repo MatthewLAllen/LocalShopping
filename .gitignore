@@ -1,0 +1,7 @@
+
+.vs
+*.user
+*/obj/*
+packages/*
+*/bin/*
+LocalShoppingAPI/LocalShopping.db
