@@ -7,12 +7,13 @@ using System.Collections.Generic;
 using System.Net;
 using System.Web.Hosting;
 using System.Web.Http;
+using System.Configuration;
 
 namespace LocalShoppingAPI.Controllers
 {
     public class ShoppingController : ApiController
     {
-        private const string MyKey = "<YourGoogleApiKey>";
+        private string MyKey = ConfigurationManager.AppSettings["ApiKey"].ToString();
         // GET: http://localhost/LocalShoppingAPI/api/Shopping?address=601%20N%2034th%20St,%20Seattle,%20WA%2098103
         public List<Place> Get(string address)
         {
@@ -61,7 +62,7 @@ namespace LocalShoppingAPI.Controllers
 
         private void GetNearbyPlaces(List<Place> retVal, float lat, float lng, string type, long houseLatLngId, string key )
         {            
-            string requestUri = string.Format("https://maps.googleapis.com/maps/api/place/nearbysearch/json?location={0},{1}&type={2}&radius=3219&key={3}", lat, lng, type, MyKey);
+            string requestUri = string.Format("https://maps.googleapis.com/maps/api/place/nearbysearch/json?location={0},{1}&type={2}&radius=3219&key={3}", lat, lng, type, key);
             var resultNearby = new WebClient().DownloadString(requestUri);
                         
             NearbyPlaceResponse npResponse = JsonConvert.DeserializeObject<NearbyPlaceResponse>(resultNearby);
@@ -71,12 +72,13 @@ namespace LocalShoppingAPI.Controllers
 
             while(npResponse.next_page_token != null)
             {
+                System.Threading.Thread.Sleep(2000);  //Need to wait before getting next results
                 requestUri = string.Format("https://maps.googleapis.com/maps/api/place/nearbysearch/json?pagetoken={0}&key={1}", npResponse.next_page_token, MyKey);
                 resultNearby = new WebClient().DownloadString(requestUri);
                 npResponse = JsonConvert.DeserializeObject<NearbyPlaceResponse>(resultNearby);
                 placeResults.AddRange(npResponse.results);
             }
-                        
+            
             foreach (NearbyPlaceResponse.Result res in placeResults)
             {
                 Place storePlace = new Place();
